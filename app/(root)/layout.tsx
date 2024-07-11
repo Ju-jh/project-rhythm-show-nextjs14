@@ -6,6 +6,7 @@ export default function RootLayout({
 }>) {
   return (
     <main className="flex w-screen h-screen flex-col items-center justify-between p-24 ">
+      Rhydmn show
       {children}
     </main>
   );

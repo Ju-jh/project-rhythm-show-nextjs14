@@ -25,43 +25,62 @@ export default function Home() {
           bufferLength = analyser.frequencyBinCount;
           dataArray = new Uint8Array(bufferLength);
 
-          draw();
+          drawVisualizer();
         });
       } catch (err) {
         console.error('Error accessing audio stream:', err);
       }
     }
 
-    function draw() {
+    function drawVisualizer() {
       const canvas = canvasRef.current;
       const canvasCtx = canvas?.getContext('2d');
+
       if (!canvas || !canvasCtx) return;
 
-      const WIDTH = canvas.width;
-      const HEIGHT = canvas.height;
-
-      function drawVisualizer() {
+      function draw() {
         analyser.getByteFrequencyData(dataArray);
-
-        if (canvasCtx) {
-          canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-
-          const barWidth = (WIDTH / bufferLength) * 2.5;
-          let barHeight;
-          let x = 0;
-
-          for (let i = 0; i < bufferLength; i++) {
-            barHeight = dataArray[i];
-            canvasCtx.fillStyle = `rgb(${barHeight + 100},50,50)`;
-            canvasCtx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
-            x += barWidth + 1;
+        if (canvas) {
+          
+          const WIDTH = canvas.width;
+          const HEIGHT = canvas.height;
+          const centerX = WIDTH / 2;
+          const centerY = HEIGHT / 2;
+          const radius = 100;
+          if (canvasCtx) {
+            canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+            canvasCtx.beginPath();
+    
+            for (let i = 0; i < bufferLength; i++) {
+              const angle = (i / bufferLength) * 2 * Math.PI;
+              const distance = radius + dataArray[i] / 2;
+              const x = centerX + distance * Math.cos(angle);
+              const y = centerY + distance * Math.sin(angle);
+    
+              if (i === 0) {
+                canvasCtx.moveTo(x, y);
+              } else {
+                const prevAngle = ((i - 1) / bufferLength) * 2 * Math.PI;
+                const prevDistance = radius + dataArray[i - 1] / 2;
+                const prevX = centerX + prevDistance * Math.cos(prevAngle);
+                const prevY = centerY + prevDistance * Math.sin(prevAngle);
+                canvasCtx.quadraticCurveTo(prevX, prevY, x, y);
+              }
+            }
+    
+            canvasCtx.closePath();
+            canvasCtx.fillStyle = 'rgba(0, 0, 0, 0)';
+            canvasCtx.fill();
+            canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            canvasCtx.stroke();
+    
+            animationId = requestAnimationFrame(draw);
           }
         }
+        }
 
-        animationId = requestAnimationFrame(drawVisualizer);
-      }
 
-      drawVisualizer();
+      draw();
     }
 
     setupAudio();
@@ -75,6 +94,22 @@ export default function Home() {
       }
     };
   }, [audioContext]);
+
+  useEffect(() => {
+    const resizeCanvas = () => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      }
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
 
   const startAudioContext = () => {
     if (!audioContext) {
@@ -98,7 +133,7 @@ export default function Home() {
           Start
         </button>
       )}
-      <canvas ref={canvasRef} className="" width="800" height="400"></canvas>
+      <canvas ref={canvasRef} className="" style={{ width: '100%', height: '100%' }}></canvas>
     </div>
   );
 }
