@@ -4,6 +4,10 @@ $$\color{transparent}\fbox{\Large \color{white}{RHYTHM SHOW PROJECT}}$$
 
 ![image](https://github.com/Ju-jh/project-rhythm-show-nextjs14/assets/121030294/28865257-af3d-4bc8-a7ae-55398bb95a24)
 
+시스템에 내장되어있는 마이크의 소리를 감지하여 불특정한 구 형태의 모양을 나타내줍니다.
+
+업무환경 혹은 음악과 관련하여 사용할 수 있는 페이지 입니다.
+
 <br>
 
 ## 0. Index
