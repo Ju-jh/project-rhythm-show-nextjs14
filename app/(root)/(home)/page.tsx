@@ -9,7 +9,7 @@ export default function Home() {
 
   useEffect(() => {
     let analyser: AnalyserNode;
-    let dataArray: Uint8Array;
+    let dataArray: Uint8Array = new Uint8Array(10);
     let bufferLength: number;
     let animationId: number;
 
@@ -24,7 +24,6 @@ export default function Home() {
           analyser.fftSize = 256;
           bufferLength = analyser.frequencyBinCount;
           dataArray = new Uint8Array(bufferLength);
-
           drawVisualizer();
         });
       } catch (err) {
@@ -39,46 +38,46 @@ export default function Home() {
       if (!canvas || !canvasCtx) return;
 
       function draw() {
+        console.log(dataArray)
         analyser.getByteFrequencyData(dataArray);
-        if (canvas) {
-          
+        if (canvasCtx && canvas) {
           const WIDTH = canvas.width;
           const HEIGHT = canvas.height;
           const centerX = WIDTH / 2;
           const centerY = HEIGHT / 2;
           const radius = 100;
-          if (canvasCtx) {
-            canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-            canvasCtx.beginPath();
-    
-            for (let i = 0; i < bufferLength; i++) {
-              const angle = (i / bufferLength) * 2 * Math.PI;
-              const distance = radius + dataArray[i] / 2;
-              const x = centerX + distance * Math.cos(angle);
-              const y = centerY + distance * Math.sin(angle);
-    
-              if (i === 0) {
-                canvasCtx.moveTo(x, y);
-              } else {
-                const prevAngle = ((i - 1) / bufferLength) * 2 * Math.PI;
-                const prevDistance = radius + dataArray[i - 1] / 2;
-                const prevX = centerX + prevDistance * Math.cos(prevAngle);
-                const prevY = centerY + prevDistance * Math.sin(prevAngle);
-                canvasCtx.quadraticCurveTo(prevX, prevY, x, y);
-              }
+
+          reorderArray(dataArray); 
+          
+          canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+          canvasCtx.beginPath();
+
+          for (let i = 0; i < bufferLength; i++) {
+            const angle = (i / bufferLength ) * 2 * Math.PI;
+            const distance = radius + dataArray[i] / 2;
+            const x = centerX + distance * Math.cos(angle);
+            const y = centerY + distance * Math.sin(angle);
+
+            if (i === 0) {
+              canvasCtx.moveTo(x + Math.random(), y + Math.random());
+            } else {
+              const prevAngle = ((i - 1) / bufferLength) * 2 * Math.PI;
+              const prevDistance = radius + dataArray[i + 1] / 30;
+              const prevX = centerX + prevDistance * Math.cos(prevAngle);
+              const prevY = centerY + prevDistance * Math.sin(prevAngle);
+              canvasCtx.quadraticCurveTo(prevX, prevY, x, y);
             }
-    
-            canvasCtx.closePath();
-            canvasCtx.fillStyle = 'rgba(0, 0, 0, 0)';
-            canvasCtx.fill();
-            canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-            canvasCtx.stroke();
-    
-            animationId = requestAnimationFrame(draw);
           }
-        }
+
+          canvasCtx.closePath();
+          canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+          canvasCtx.fill();
+          canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          canvasCtx.stroke();
         }
 
+        animationId = requestAnimationFrame(draw);
+      }
 
       draw();
     }
@@ -122,6 +121,29 @@ export default function Home() {
       });
     }
   };
+
+function reorderArray(array: Uint8Array) {
+  const newArray = new Uint8Array(array.length);
+
+  // 배열의 요소들을 새 배열에 복사
+  for (let i = 0; i < array.length; i++) {
+    newArray[i] = array[i];
+  }
+
+  // Fisher-Yates 알고리즘을 사용하여 배열 요소들을 무작위로 섞음
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+
+  // 원래 배열에 섞인 새로운 배열 값을 복사
+  for (let i = 0; i < array.length; i++) {
+    array[i] = newArray[i];
+  }
+}
+
+
+
 
   return (
     <div className="w-full h-full flex flex-col justify-center items-center">
